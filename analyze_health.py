@@ -7,10 +7,11 @@ import logging
 import json
 
 # Configuration
-BASE_DIR = Path.home() / "plant-health"
-IMAGE_DIR = BASE_DIR / "images"
-LOG_FILE = BASE_DIR / "camera.log"
-HEALTH_LOG = BASE_DIR / "health_log.json"
+IMAGE_DIR = Path.home() / "logs" / "plant-water" / "images"
+HEALTH_DIR = Path.home() / "logs" / "plant-water" / "health"
+HEALTH_DIR.mkdir(parents=True, exist_ok=True)
+LOG_FILE = HEALTH_DIR / "health.log"
+HEALTH_LOG = HEALTH_DIR / "health_log.json"
 
 # Setup logging
 logging.basicConfig(

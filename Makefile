@@ -1,6 +1,7 @@
 PYTHON := $(shell which python3)
 SCRIPT := $(shell realpath water_plant.py)
-CRON_JOB := 0 * * * * $(PYTHON) $(SCRIPT) >> $(HOME)/water_plant.log 2>&1
+LOG_DIR := $(HOME)/logs/plant-water/water
+CRON_JOB := 0 * * * * mkdir -p $(LOG_DIR) && $(PYTHON) $(SCRIPT) >> $(LOG_DIR)/water_plant.log 2>&1
 
 .PHONY: schedule-water-plant unschedule-water-plant
 

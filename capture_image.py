@@ -5,11 +5,10 @@ from pathlib import Path
 import logging
 
 # Configuration
-BASE_DIR = Path.home() / "plant-health"
-IMAGE_DIR = BASE_DIR / "images"
-LOG_FILE = BASE_DIR / "camera.log"
+IMAGE_DIR = Path.home() / "logs" / "plant-water" / "images"
+LOG_FILE = IMAGE_DIR / "camera.log"
 
-IMAGE_DIR.mkdir(exist_ok=True)
+IMAGE_DIR.mkdir(parents=True, exist_ok=True)
 
 # Setup logging
 logging.basicConfig(

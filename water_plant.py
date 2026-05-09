@@ -9,8 +9,10 @@ RELAY_PIN = 27
 DRY_THRESHOLD = 560
 WATERING_DURATION = 3
 COOLDOWN_MINUTES = 300
+LOG_DIR = Path.home() / "logs" / "plant-water" / "water"
+LOG_DIR.mkdir(parents=True, exist_ok=True)
 LAST_WATERED_FILE = Path.home() / "last_watered.txt"
-LOG_FILE = Path.home() / "moisture_log.csv"
+LOG_FILE = LOG_DIR / "moisture_log.csv"
 
 if not LOG_FILE.exists():
     with open(LOG_FILE, 'w', newline='') as f:
