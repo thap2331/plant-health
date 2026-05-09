@@ -42,36 +42,32 @@ def log_reading(moisture, is_dry, watered, cooldown_active):
         writer.writerow([datetime.now().isoformat(), moisture, is_dry, watered, cooldown_active])
 
 try:
-    print("Starting moisture monitor...")
-    while True:
-        value = read_moisture()
-        is_dry = value > DRY_THRESHOLD
-        watered = False
-        cooldown_active = False
+    value = read_moisture()
+    is_dry = value > DRY_THRESHOLD
+    watered = False
+    cooldown_active = False
 
-        print(f"Moisture: {value}", end="")
+    print(f"Moisture: {value}", end="")
 
-        if is_dry:
-            last = get_last_watered()
-            elapsed_min = (time.time() - last) / 60
-            if elapsed_min < COOLDOWN_MINUTES:
-                cooldown_active = True
-                print(f" → Dry but watered {elapsed_min:.1f}m ago, skipping")
-            else:
-                print(f" → Dry, watering for {WATERING_DURATION}s")
-                GPIO.output(RELAY_PIN, GPIO.LOW)
-                time.sleep(WATERING_DURATION)
-                GPIO.output(RELAY_PIN, GPIO.HIGH)
-                set_last_watered()
-                watered = True
-                print(" Watering complete")
+    if is_dry:
+        last = get_last_watered()
+        elapsed_min = (time.time() - last) / 60
+        if elapsed_min < COOLDOWN_MINUTES:
+            cooldown_active = True
+            print(f" → Dry but watered {elapsed_min:.1f}m ago, skipping")
         else:
-            print(" → Soil OK")
+            print(f" → Dry, watering for {WATERING_DURATION}s")
+            GPIO.output(RELAY_PIN, GPIO.LOW)
+            time.sleep(WATERING_DURATION)
+            GPIO.output(RELAY_PIN, GPIO.HIGH)
+            set_last_watered()
+            watered = True
+            print(" Watering complete")
+    else:
+        print(" → Soil OK")
 
-        log_reading(value, is_dry, watered, cooldown_active)
-        time.sleep(60)
+    log_reading(value, is_dry, watered, cooldown_active)
 
-except KeyboardInterrupt:
-    print("\nShutting down gracefully")
+finally:
     GPIO.cleanup()
     spi.close()

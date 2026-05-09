@@ -2,3 +2,13 @@
 *.csv
 last_watered.txt
 camera.log
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+*.egg-info/
+
+# OS
+.DS_Store
