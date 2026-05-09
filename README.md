@@ -25,3 +25,17 @@ make unschedule-water-plant
 ```
 
 Logs are written to `~/water_plant.log`. Moisture readings are logged to `~/moisture_log.csv`.
+
+## Pulling Logs from Pi
+
+To copy all logs from the Pi to your local machine:
+
+```bash
+scp -r <pi-user>@<pi-hostname>:~/logs $HOME/pi-logs/
+```
+
+Example:
+
+```bash
+scp -r suraj@raspberrypi.local:~/logs $HOME/pi-logs/
+```
