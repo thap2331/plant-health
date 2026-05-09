@@ -1,0 +1,4 @@
+*.log
+*.csv
+last_watered.txt
+camera.log
