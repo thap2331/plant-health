@@ -1,0 +1,19 @@
+services:
+  api:
+    build: .
+    command: uvicorn dashboard.api:app --host 0.0.0.0 --port 8000 --reload
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./data:/app/data
+      - ./dashboard:/app/dashboard
+
+  streamlit:
+    build: .
+    command: streamlit run dashboard/app.py --server.port 8501 --server.address 0.0.0.0
+    ports:
+      - "8501:8501"
+    volumes:
+      - ./dashboard:/app/dashboard
+    depends_on:
+      - api
