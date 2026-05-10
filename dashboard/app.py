@@ -21,63 +21,80 @@ try:
 except requests.exceptions.ConnectionError:
     pass
 
+# Time range selector
+RANGES = {"24 hours": 24, "48 hours": 48, "7 days": 168, "30 days": 720, "All time": None}
+selected_range = st.selectbox("Time range", list(RANGES.keys()), index=0)
+hours = RANGES[selected_range]
+
 try:
-    rows = requests.get(f"{API}/moisture/latest", timeout=5).json()
+    rows = requests.get(f"{API}/moisture", timeout=5).json()
     if not rows:
-        st.warning("No moisture data in the last 24 hours.")
+        st.warning("No moisture data available.")
     else:
         df = pd.DataFrame(rows)
         df['timestamp'] = pd.to_datetime(df['timestamp'])
+        if hours:
+            cutoff = pd.Timestamp.now() - pd.Timedelta(hours=hours)
+            df = df[df['timestamp'] >= cutoff]
 
-        latest = df.iloc[-1]
-        last_watered = df[df['watered']]['timestamp'].max()
+        if df.empty:
+            st.warning(f"No moisture data in the last {selected_range}.")
+        else:
+            latest = df.iloc[-1]
+            last_watered = df[df['watered']]['timestamp'].max()
 
-        col1, col2, col3, col4 = st.columns(4)
-        col1.metric("Moisture", f"{latest['moisture_pct']}%")
-        col2.metric("Status", "Dry" if latest['is_dry'] else "OK")
-        col3.metric("Last Watered", last_watered.strftime("%b %d %H:%M") if pd.notna(last_watered) else "—")
-        col4.metric("Readings Today", len(df))
+            col1, col2, col3, col4 = st.columns(4)
+            col1.metric("Moisture", f"{latest['moisture_pct']}%")
+            col2.metric("Status", "Dry" if latest['is_dry'] else "OK")
+            col3.metric("Last Watered", last_watered.strftime("%b %d %H:%M") if pd.notna(last_watered) else "—")
+            col4.metric("Readings Today", len(df))
 
-        fig = make_subplots(specs=[[{"secondary_y": True}]])
-        fig.add_trace(
-            go.Scatter(x=df['timestamp'], y=df['moisture_pct'], mode='lines', name='Moisture %'),
-            secondary_y=False,
-        )
-        fig.add_trace(
-            go.Scatter(x=df['timestamp'], y=df['raw'], mode='lines', name='Raw ADC',
-                       line=dict(dash='dot', color='orange'), visible='legendonly'),
-            secondary_y=True,
-        )
-
-        watered_df = df[df['watered']]
-        if not watered_df.empty:
+            fig = make_subplots(specs=[[{"secondary_y": True}]])
             fig.add_trace(
-                go.Scatter(x=watered_df['timestamp'], y=watered_df['moisture_pct'],
-                           mode='text', name='Watered',
-                           text='💧', textfont=dict(size=20)),
+                go.Scatter(x=df['timestamp'], y=df['moisture_pct'], mode='lines', name='Moisture %',
+                           hovertemplate='%{x|%b %d, %H:%M}<br><b>Moisture: %{y}%</b><extra></extra>'),
                 secondary_y=False,
             )
-
-        if img_list:
-            img_ts_df = pd.DataFrame(img_list)
-            img_ts_df['timestamp'] = pd.to_datetime(img_ts_df['timestamp'])
-            # Snap each 📷 to the y-value of the nearest moisture reading
-            img_ts_df['y'] = img_ts_df['timestamp'].apply(
-                lambda ts: df.loc[(df['timestamp'] - ts).abs().idxmin(), 'moisture_pct']
-            )
             fig.add_trace(
-                go.Scatter(x=img_ts_df['timestamp'], y=img_ts_df['y'],
-                           mode='text', name='Photo taken',
-                           text='📷', textfont=dict(size=16),
-                           hovertext=img_ts_df['filename']),
-                secondary_y=False,
+                go.Scatter(x=df['timestamp'], y=df['raw'], mode='lines', name='Raw ADC',
+                           line=dict(dash='dot', color='orange'), visible='legendonly',
+                           hovertemplate='%{x|%b %d, %H:%M}<br>Raw ADC: %{y}<extra></extra>'),
+                secondary_y=True,
             )
 
-        fig.add_hline(y=40, line_dash="dash", line_color="red", annotation_text="Dry threshold")
-        fig.update_yaxes(title_text="Moisture %", range=[0, 100], secondary_y=False)
-        fig.update_yaxes(title_text="Raw ADC", secondary_y=True)
-        fig.update_layout(xaxis_title="Time")
-        st.plotly_chart(fig, use_container_width=True)
+            watered_df = df[df['watered']]
+            if not watered_df.empty:
+                fig.add_trace(
+                    go.Scatter(x=watered_df['timestamp'], y=watered_df['moisture_pct'],
+                               mode='text', name='Watered',
+                               text='💧', textfont=dict(size=20),
+                               hovertemplate='%{x|%b %d, %H:%M}<br>Watered<extra></extra>'),
+                    secondary_y=False,
+                )
+
+            if img_list:
+                img_ts_df = pd.DataFrame(img_list)
+                img_ts_df['timestamp'] = pd.to_datetime(img_ts_df['timestamp'])
+                if hours:
+                    img_ts_df = img_ts_df[img_ts_df['timestamp'] >= cutoff]
+                if not img_ts_df.empty:
+                    img_ts_df['y'] = img_ts_df['timestamp'].apply(
+                        lambda ts: df.loc[(df['timestamp'] - ts).abs().idxmin(), 'moisture_pct']
+                    )
+                    fig.add_trace(
+                        go.Scatter(x=img_ts_df['timestamp'], y=img_ts_df['y'],
+                                   mode='text', name='Photo taken',
+                                   text='📷', textfont=dict(size=16),
+                                   hovertext=img_ts_df['filename'],
+                                   hovertemplate='%{x|%b %d, %H:%M}<br>📷 %{hovertext}<extra></extra>'),
+                        secondary_y=False,
+                    )
+
+            fig.add_hline(y=40, line_dash="dash", line_color="red", annotation_text="Dry threshold")
+            fig.update_yaxes(title_text="Moisture %", range=[0, 100], secondary_y=False)
+            fig.update_yaxes(title_text="Raw ADC", secondary_y=True)
+            fig.update_layout(xaxis_title="Time")
+            st.plotly_chart(fig, use_container_width=True)
 
 except requests.exceptions.ConnectionError:
     st.error("API unavailable — is the api container running?")
@@ -105,7 +122,7 @@ if img_list:
     with col_label:
         st.markdown(f"**{label}**")
 
-    if df is not None:
+    if df is not None and not df.empty:
         idx = (df['timestamp'] - img_ts).abs().idxmin()
         nearest = df.loc[idx]
         delta_min = abs((nearest['timestamp'] - img_ts).total_seconds()) / 60
