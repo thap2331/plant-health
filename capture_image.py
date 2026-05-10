@@ -12,12 +12,9 @@ IMAGE_DIR.mkdir(parents=True, exist_ok=True)
 
 # Setup logging
 logging.basicConfig(
+    filename=LOG_FILE,
     level=logging.INFO,
     format='%(asctime)s - %(levelname)s - %(message)s',
-    handlers=[
-        logging.FileHandler(LOG_FILE),
-        logging.StreamHandler()  # Also print to console
-    ]
 )
 
 def capture_image():
