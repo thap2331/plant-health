@@ -12,3 +12,7 @@ __pycache__/
 
 # OS
 .DS_Store
+
+# Dashboard data (volume-mounted at runtime)
+data/*
+!data/.gitkeep

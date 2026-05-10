@@ -25,3 +25,19 @@ schedule-capture-image:
 unschedule-capture-image:
 	crontab -l 2>/dev/null | grep -v "$(IMAGE_SCRIPT)" | crontab -
 	@echo "Cron job removed"
+
+PI_USER    = suraj
+PI_IP      = raspberrypi.local
+PI_LOG_DIR = ~/logs/plant-water
+
+sync:
+	scp $(PI_USER)@$(PI_IP):$(PI_LOG_DIR)/water/moisture_log.csv ./data/
+	scp -r $(PI_USER)@$(PI_IP):$(PI_LOG_DIR)/images/ ./data/
+
+up:
+	docker compose up --build
+
+down:
+	docker compose down
+
+dev: sync up
