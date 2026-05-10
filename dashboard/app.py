@@ -37,6 +37,15 @@ try:
                    line=dict(dash='dot', color='orange'), visible='legendonly'),
         secondary_y=True,
     )
+    watered_df = df[df['watered']]
+    if not watered_df.empty:
+        fig.add_trace(
+            go.Scatter(x=watered_df['timestamp'], y=watered_df['moisture_pct'],
+                       mode='text', name='Watered',
+                       text='💧', textfont=dict(size=20)),
+            secondary_y=False,
+        )
+
     fig.add_hline(y=40, line_dash="dash", line_color="red", annotation_text="Dry threshold")
     fig.update_yaxes(title_text="Moisture %", range=[0, 100], secondary_y=False)
     fig.update_yaxes(title_text="Raw ADC", secondary_y=True)
