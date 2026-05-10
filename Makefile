@@ -8,7 +8,7 @@ IMAGE_SCRIPT   := $(shell realpath capture_image.py)
 IMAGE_LOG_DIR  := $(HOME)/logs/plant-water/images
 IMAGE_CRON_JOB := 0 * * * * mkdir -p $(IMAGE_LOG_DIR) && $(PYTHON) $(IMAGE_SCRIPT) 2>> $(IMAGE_LOG_DIR)/camera.log
 
-.PHONY: schedule-water-plant unschedule-water-plant schedule-capture-image unschedule-capture-image
+.PHONY: schedule-water-plant unschedule-water-plant schedule-capture-image unschedule-capture-image data-sync up down dev
 
 schedule-water-plant:
 	(crontab -l 2>/dev/null | grep -v "$(WATER_SCRIPT)"; echo "$(WATER_CRON_JOB)") | crontab -
@@ -30,9 +30,8 @@ PI_USER    = suraj
 PI_IP      = raspberrypi.local
 PI_LOG_DIR = ~/logs/plant-water
 
-sync:
-	scp $(PI_USER)@$(PI_IP):$(PI_LOG_DIR)/water/moisture_log.csv ./data/
-	scp -r $(PI_USER)@$(PI_IP):$(PI_LOG_DIR)/images/ ./data/
+data-sync:
+	rsync -avz --progress $(PI_USER)@$(PI_IP):$(PI_LOG_DIR)/ ./data/
 
 up:
 	docker compose up --build
@@ -40,4 +39,4 @@ up:
 down:
 	docker compose down
 
-dev: sync up
+dev: data-sync up

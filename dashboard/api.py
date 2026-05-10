@@ -1,20 +1,21 @@
 from fastapi import FastAPI
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, JSONResponse
 import pandas as pd
 from pathlib import Path
 from datetime import datetime, timedelta
 
 app = FastAPI()
 DATA_DIR = Path("/app/data")
-CSV_PATH = DATA_DIR / "moisture_log.csv"
+CSV_PATH = DATA_DIR / "water" / "moisture_log.csv"
 IMAGE_DIR = DATA_DIR / "images"
 
 
 def load_df():
-    df = pd.read_csv(CSV_PATH)
+    df = pd.read_csv(CSV_PATH, header=0,
+                     names=['timestamp', 'raw', 'moisture_pct', 'is_dry', 'watered', 'cooldown_active'])
     df['timestamp'] = pd.to_datetime(df['timestamp'])
     for col in ('is_dry', 'watered', 'cooldown_active'):
-        df[col] = df[col] == 'True'
+        df[col] = df[col].astype(str).str.lower() == 'true'
     return df
 
 
@@ -52,3 +53,11 @@ def image_list():
         ts = datetime.strptime(stem, "%Y%m%d_%H%M%S").isoformat()
         result.append({"filename": p.name, "timestamp": ts})
     return result
+
+
+@app.get("/images/{filename}")
+def image_by_filename(filename: str):
+    path = IMAGE_DIR / filename
+    if not path.exists():
+        return JSONResponse({"error": "not found"}, status_code=404)
+    return FileResponse(path)
