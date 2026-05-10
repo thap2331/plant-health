@@ -16,3 +16,9 @@ __pycache__/
 # Dashboard data (volume-mounted at runtime)
 data/*
 !data/.gitkeep
+data/moisture_log.csv
+data/images/
+data/correlated_log.csv
+
+# Output data
+health_log.json
