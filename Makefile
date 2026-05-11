@@ -6,7 +6,7 @@ WATER_CRON_JOB := 0 * * * * mkdir -p $(WATER_LOG_DIR) && $(PYTHON) $(WATER_SCRIP
 
 IMAGE_SCRIPT   := $(shell realpath capture_image.py)
 IMAGE_LOG_DIR  := $(HOME)/logs/plant-water/images
-IMAGE_CRON_JOB := 0 * * * * mkdir -p $(IMAGE_LOG_DIR) && $(PYTHON) $(IMAGE_SCRIPT) 2>> $(IMAGE_LOG_DIR)/camera.log
+IMAGE_CRON_JOB := 0 6-18 * * * mkdir -p $(IMAGE_LOG_DIR) && $(PYTHON) $(IMAGE_SCRIPT) 2>> $(IMAGE_LOG_DIR)/camera.log
 
 .PHONY: schedule-water-plant unschedule-water-plant schedule-capture-image unschedule-capture-image data-sync up down dev
 
